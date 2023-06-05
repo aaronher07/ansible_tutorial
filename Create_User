@@ -1,0 +1,34 @@
+      - name:  User ansuser
+        user:
+          name: ansuser
+          state: present
+          update_password: always
+          password: "{{ user_default_password }}"
+          shell: /bin/bash
+
+      - name: Update sudoers file
+        lineinfile:
+          dest: /etc/sudoers
+          state: present
+          regexp: '^ansuser'
+          line: 'ansuser ALL=NOPASSWD: ALL'
+          validate: 'visudo -cf %s'
+
+      - name: Copy authorized keys
+        copy:
+          src: "/home/ansuser/.ssh/id_rsa.pub"
+          dest: /home/ansuser/.ssh/
+
+      - name: change perms
+        file:
+          path: "/home/ansuser/.ssh"
+          state: directory
+          owner: ansuser
+          group: ansuser
+          mode: 0744
+          recurse: yes
+
+      - name: Copy Authorized_keys
+        copy:
+          src: "/home/ansuser/.ssh/authorized_keys"
+          dest: "dest=/home/ansuser/.ssh/"
