@@ -1,0 +1,17 @@
+---
+
+
+- hosts: all
+  tasks:
+  - name: Make Directory
+    file:
+      path: "/home/ansuser/.ssh"
+      state: directory
+  - name: create empty file
+    file:
+      path: "/home/ansuser/.ssh/authorized_keys"
+      state: touch
+  - name: put pubkey
+    lineinfile:
+      path: "/home/ansuser/.ssh/authorized_keys"
+      line: "{{ pubkey }}"
