@@ -1,0 +1,24 @@
+---
+
+# These variables are necessary for successful winrm connection by Ansible.
+# In production, a service account that has local admin privs on different hosts would
+# need to be used to do real tasks at the local host level.
+# Additionally, for domain related tasks, a service account holding the necessary privs
+# would need to be used.
+
+ansible_user: adm-jdodd@JEWELS.COM
+
+# This is an encrypted version of adm-jdodd@JEWELS.COM password generated with the "ansible-vault encrypt_string" command.
+#https://docs.ansible.com/ansible/latest/user_guide/vault.html#id1
+# Very handy utility because the encyrpted password string can be used directly in a play, taks, or vars file as desired.
+# Another option we typically use is an entire file, containing info that needs to be protected, encrypted with the "ansible-vault create" command
+ansible_password: !vault |
+          $ANSIBLE_VAULT;1.1;AES256
+          61353533353861303130663430616433383061646336376132336433373764383234626264643961
+          6361623231353937363739643331396136643235343038630a303764303030363863633532336136
+          33313537306634663762653661316464613538616339386662333737373264633639346438646137
+          6465363131383663620a333539626265386662663566656365313864623236333266356437363565
+          6432
+ansible_connection: winrm
+ansible_winrm_transport: kerberos
+ansible_winrm_port: 5985
