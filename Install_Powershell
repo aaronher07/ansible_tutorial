@@ -1,0 +1,6 @@
+---
+
+- name: Install Powershell
+  hosts: all
+  roles:
+    - { role: northwave.powershell }
