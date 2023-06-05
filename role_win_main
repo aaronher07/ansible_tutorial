@@ -1,0 +1,75 @@
+---
+
+- name: Display Ansible facts gathered by the play
+  debug:
+    var: ansible_facts
+
+- name: Get info about the winrm config, capture in variable
+  win_shell: winrm get winrm/config/service
+  register: winrm_conf
+  tags:
+    - winrm_conf_info
+
+- name: Display output from winrm config command
+  debug:
+    var: winrm_conf.stdout_lines
+
+- name: Get info about an installed service, capture in variable
+  win_service:
+    name: Print Spooler
+  register: services
+  tags:
+    - services_info
+
+- name: Display output about services
+  debug:
+    var: services
+
+- name: Create a test directory
+  win_file:
+    path: C:\Temp\made_by_ansible
+    state: directory
+  tags:
+    - create_directory
+
+- name: Run whoami for grins
+  win_whoami:
+  register: whoami
+  tags:
+    - run_whoami
+
+- name: Display whoami info
+  debug:
+    var: whoami
+
+- name: Create a local group
+  win_group:
+    name: ansman
+    description: "Made by Ansible"
+    state: present
+  tags:
+    - create_group
+
+- name: Add members to local group
+  win_group_membership:
+    name: ansman
+    members:
+      - adm-jdodd@JEWELS.COM
+      - jdodd@JEWELS.LOCAL
+  tags:
+    - add_members_to_group
+
+- name: Install the SCCM agent
+  win_package:
+    path: \\pwaksccmapp01.jewels.local\sw$\sccm\client\ccmsetup.exe
+    product_id: '{2CE44167-3417-4A08-9CC3-9D7D9B5C9AE9}'
+    arguments:
+      - /source:\\pwaksccmapp01.jewels.local\sw$\sccm\client\ccmsetup.exe
+      - /mp:pwaksccmapp01.jewels.local
+      - /forceinstall
+      - SMSSITECODE=AUTO
+      - SMSSITEREASSING=TRUE
+    user_name: '{{ ansible_user }}'
+    user_password: '{{ ansible_password }}'
+  tags:
+    - install_sccm_agent
