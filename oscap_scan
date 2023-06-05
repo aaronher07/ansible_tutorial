@@ -1,0 +1,41 @@
+- hosts: all
+
+  vars:
+    oscap_profile: xccdf_org.ssgproject.content_profile_standard
+    oscap_policy: ssg-centos7-ds.xml
+
+  tasks:
+
+  - name: install openscap scanner
+    package:
+      name: "{{ item }}"
+      state: latest
+    with_items:
+    - openscap-scanner
+    - scap-security-guide
+
+  - block:
+    - name: Run Evaluation of server
+      command: oscap xccdf eval \
+        --profile {{ oscap_profile }} \
+        --results-arf /tmp/oscap-arf.xml \
+        --report /tmp/oscap-report.html \
+        --fetch-remote-resources \
+        /usr/share/xml/scap/ssg/content/{{ oscap_policy }}
+
+    - name: Remediate server
+      command: oscap xccdf eval \
+        --remediate --profile {{ oscap_profile }} \
+        --results-arf arf.xml \
+        --report report.html \
+        /usr/share/xml/scap/ssg/content/{{ oscap_policy }}
+
+#    always:
+#    - name: download report
+#      fetch:
+ #       src: /tmp/oscap-report.html
+ #       dest: ../oscap-reports/{{ inventory_hostname }}.html
+ #       flat: yes
+ #       cd /usr/share/xml/scap/ssg/content/
+ #         5 oscap xccdf eval --remediate --profile xccdf_org.ssgproject.content_profile_standard --results scan-xccdf-results.xml /usr/share/xml/scap/ssg/content/ssg-centos7-ds.xml
+ #         ssg-centos7-ds.xml
