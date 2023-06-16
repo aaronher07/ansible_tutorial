@@ -1,0 +1,60 @@
+[root@RHEL8-Test002 admin]# cat template_cleanup.sh
+#!/bin/bash
+
+#Unregister from RHSM
+subscription-manager remove --all
+subscription-manager unregister
+subscription-manager clean
+
+# stop logging services
+/usr/bin/systemctl stop rsyslog
+/usr/bin/systemctl stop auditd
+
+# remove old kernels
+/bin/package-cleanup --oldkernels --count=1
+
+#clean yum cache
+/usr/bin/yum clean all
+
+#force logrotate to shrink logspace and remove old logs as well as truncate logs
+/usr/sbin/logrotate -f /etc/logrotate.conf
+/bin/rm -f /var/log/*-???????? /var/log/*.gz
+/bin/rm -f /var/log/dmesg.old
+/bin/rm -rf /var/log/anaconda
+/bin/cat /dev/null > /var/log/audit/audit.log
+/bin/cat /dev/null > /var/log/wtmp
+/bin/cat /dev/null > /var/log/lastlog
+/bin/cat /dev/null > /var/log/grubby
+
+#remove udev hardware rules
+#/bin/rm -f /etc/udev/rules.d/70*
+
+#remove uuid from ifcfg scripts
+#sed -i '/^\(HWADDR\|UUID\)=/d' /etc/sysconfig/network-scripts/ifcfg-e*
+
+# enable network interface onboot
+#sed -i -e 's@^ONBOOT="no@ONBOOT="yes@' /etc/sysconfig/network-scripts/ifcfg-e*
+
+#Set splunk forwarder to clone prep configuration
+/opt/splunkforwarder/bin/splunk stop
+/opt/splunkforwarder/bin/splunk clone-prep-clear-config
+
+#Wipe Axon config to template
+systemctl stop tripwire-axon-agent
+systemctl stop tw-eg-service
+rm -rf /var/cache/tripwire/
+rm -rf /var/spool/tripwire/
+rm -rf /var/log/tripwire/
+
+#Reset Symantec to Template Install mode
+#/home/admin/LinuxInstaller --image
+
+#remove SSH host keys
+/bin/rm -f /etc/ssh/*key*
+
+#remove root users shell history
+/bin/rm -f ~root/.bash_history
+unset HISTFILE
+
+#remove root users SSH history
+/bin/rm -rf ~root/.ssh/known_hosts
