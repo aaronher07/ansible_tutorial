@@ -1,0 +1,44 @@
+#!/bin/bash
+# This script allows the gathering of files for audit from servers in Rackspace that
+# do not have root ssh keys from prodjump. It needs to be run as your standard account
+# and it will sudo to root on each servers which will require your password to be entered.
+# This will place a copy of a script on each of the servers in the file called
+# "servers_rackspace" that should be in the same directory as this one.
+#
+
+USER=`whoami`
+
+# Get name of Service Now ticket
+echo "Usage - Rackspace_gather-prodjump.sh <ticket_number>"
+if test "$#" -eq 1; then
+   TICKET=$1
+   echo "Using ticket = $1"
+else
+   # User input
+   read -p "Enter Service Now ticket number: " TICKET
+fi
+
+
+for SERVER in `cat ./servers_Rackspace`
+   do echo $SERVER
+      echo "Creating directory /home/"$USER"/"$TICKET
+      ssh -q $SERVER -t "mkdir /home/$USER/$TICKET"
+      echo "Uploading "$TICKET"_gather-signetomni.sh script"
+      scp -p ./$TICKET"_gather-signetomni.sh" $SERVER:/home/$USER/$TICKET/
+      echo "Executing script to gather files"
+      ssh -q $SERVER -t "cd /home/$USER/$TICKET/; sudo ./$TICKET'_gather-signetomni.sh' > ./$SERVER'_gather.txt'"
+      echo "Copying files back to prodjump"
+      scp -p $SERVER:/home/$USER/$TICKET/$SERVER"_gather.zip" .
+   done
+
+for SERVER in `cat ./servers`
+   do echo $SERVER
+      echo "Creating directory /home/"$USER"/"$TICKET
+      ssh -q $SERVER -t "mkdir /home/$USER/$TICKET"
+      echo "Uploading "$TICKET"_gather-signet.sh script"
+      scp -p ./$TICKET"_gather-signet.sh" $SERVER:/home/$USER/$TICKET/
+      echo "Executing script to gather files"
+      sudo ssh -q $SERVER -t "cd /home/$USER/$TICKET/; ./$TICKET'_gather-signet.sh' > ./$SERVER'_gather.txt'"
+      echo "Copying files back to prodjump"
+      scp -p $SERVER:/home/$USER/$TICKET/$SERVER"_gather.zip" .
+   done
