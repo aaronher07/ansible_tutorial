@@ -1,0 +1,59 @@
+#!/bin/sh
+# This script will gather select info for a list of servers
+# and write the info to a .csv file for use in Excel
+
+# Define needed variables
+# Uncomment the next two lines to run
+# against Akron servers
+OUTFILE="/home/jdodd/akr_server_details.csv"
+SRVLIST="/home/jdodd/akr_servers"
+# Uncomment the next two lines
+# (and comment the previous two)
+# to run against C1 servers
+#OUTFILE="/home/jdodd/c1_server_details.csv"
+#SRVLIST="/home/jdodd/c1_servers"
+
+# Create the output file
+touch "${OUTFILE}"
+
+# Add the column names to the output file
+printf \"Hostname\"","\""OS Version"\"","\"Environment\"","\""IP Address"\"",""\n" >>"${OUTFILE}"
+
+# Loop through the list of servers, gathering the specified info
+for h in $(cat "${SRVLIST}"); do
+  if $(ping -c 1 -w 3 "${h}" &>/dev/null); then
+    echo "Gathering data for ${h}"
+    HNAME=$(ssh -q "${h}" "hostname -f")
+    OSVER=$(ssh -q "${h}" "cat /etc/redhat-release")
+    TNAME=$(echo ${HNAME} | awk -F . '{ print $1 }')
+        case "${TNAME}" in
+        d*|*d|*dev*|*DEV*)
+        ENVIRO="Development"
+        ;;
+        *perf*|*PERF*)
+        ENVIRO="Perf"
+        ;;
+        q*|*q|*qa*|*QA*)
+        ENVIRO="QA"
+        ;;
+        s*|*stage*|*STAGE*)
+        ENVIRO="Stage"
+        ;;
+        p*|*p|*prod*|*PROD*)
+        ENVIRO="Production"
+        ;;
+        t*|*t|*test*|*TEST*)
+        ENVIRO="Test"
+        ;;
+        u*|*u)
+        ENVIRO="User Testing"
+        ;;
+        esac
+    ADDR=$(dig "${h}" +search +short)
+    printf \"${HNAME}\"","\""${OSVER}"\"","\""${ENVIRO}"\"","\"${ADDR}\"",""\n" >>"${OUTFILE}"
+  fi
+  unset HNAME
+  unset OSVER
+  unset ENVIRO
+  unset ADDR
+done
