@@ -1,0 +1,11 @@
+#!/bin/bash
+
+while read host
+do
+        if ping -W 1 -c 1 $host &> /dev/null
+        then
+                echo $host,'good'
+        else
+                echo $host,'bad'
+        fi
+done < testping
