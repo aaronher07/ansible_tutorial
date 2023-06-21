@@ -1,0 +1,17 @@
+#!/bin/sh
+CWD=`pwd`
+ERRFILE="$CWD/error.log"
+COLLECTFILE="$CWD/standard.log"
+SRVLIST="$CWD/Akron_Hostnames.txt"
+
+for SERVER in `cat $SRVLIST`
+do
+ping -c 1 $SERVER 1>/dev/null 2>&1
+STAT=$?
+if [ $STAT -eq 0 ];
+then
+echo "Ping success for $SERVER" >> $COLLECTFILE
+else
+echo "Ping failed for $SERVER" >> $ERRFILE
+fi
+done
